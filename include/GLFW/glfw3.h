@@ -6174,6 +6174,16 @@ GLFWAPI int glfwExtensionSupported(const char* extension);
  */
 GLFWAPI GLFWglproc glfwGetProcAddress(const char* procname);
 
+/*! @brief Custom functionality - NOT PLATFORM AGNOSTIC
+*   Providing a method for the user to control which area of the client window
+*   is a valid area for the cursor to drag the window.* 
+*   This is only specific for Win32 non-decorated customizations that are added
+*   with this branch.
+*/
+typedef int(*glfwMouseDragCheckFn)();
+
+GLFWAPI void SetMouseDragCheckFn(glfwMouseDragCheckFn function);
+
 /*! @brief Returns whether the Vulkan loader and an ICD have been found.
  *
  *  This function returns whether the Vulkan loader and any minimally functional
