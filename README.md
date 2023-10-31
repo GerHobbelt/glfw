@@ -169,6 +169,7 @@ information on what to include when reporting a bug.
  - Renamed `GLFW_USE_WAYLAND` CMake option to `GLFW_BUILD_WAYLAND` (#1958)
  - Removed `GLFW_USE_OSMESA` CMake option enabling the Null platform (#1958)
  - Removed CMake generated configuration header
+ - Removed the limit of only reporting the 8 named mouse buttons
  - Bugfix: The CMake config-file package used an absolute path and was not
    relocatable (#1470)
  - Bugfix: Video modes with a duplicate screen area were discarded (#1555,#1556)
