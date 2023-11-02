@@ -300,8 +300,9 @@ static void makeContextCurrentWGL(_GLFWwindow* window)
     {
         if (!wglMakeCurrent(NULL, NULL))
         {
-            _glfwInputErrorWin32(GLFW_PLATFORM_ERROR,
-                                 "WGL: Failed to clear current context");
+            // CAUSES A BUG ON INTEL DRIVERS
+            // _glfwInputErrorWin32(GLFW_PLATFORM_ERROR,
+            //                      "WGL: Failed to clear current context");
         }
 
         _glfwPlatformSetTls(&_glfw.contextSlot, NULL);
