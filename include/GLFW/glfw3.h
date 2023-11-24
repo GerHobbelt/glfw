@@ -5191,10 +5191,13 @@ GLFWAPI GLFWcharmodsfun glfwSetCharModsCallback(GLFWwindow* window, GLFWcharmods
  *  is called when a mouse button is pressed or released.
  *
  *  When a window loses input focus, it will generate synthetic mouse button
- *  release events for all pressed mouse buttons.  You can tell these events
- *  from user-generated events by the fact that the synthetic ones are generated
- *  after the focus loss event has been processed, i.e. after the
+ *  release events for all pressed named mouse buttons.  You can tell these
+ *  events from user-generated events by the fact that the synthetic ones are
+ *  generated after the focus loss event has been processed, i.e. after the
  *  [window focus callback](@ref glfwSetWindowFocusCallback) has been called.
+ *
+ *  The reported `button` value can be higher than `GLFW_MOUSE_BUTTON_LAST` if
+ *  the button is not a [named button](@ref buttons).
  *
  *  @param[in] window The window whose callback to set.
  *  @param[in] callback The new callback, or `NULL` to remove the currently set
