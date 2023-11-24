@@ -142,6 +142,7 @@ video tutorials.
  - Marcel Metz
  - Liam Middlebrook
  - Ave Milia
+ - Icyllis Milica
  - Jonathan Miller
  - Kenneth Miller
  - Bruce Mitchener
@@ -214,6 +215,7 @@ video tutorials.
  - Dmitri Shuralyov
  - Joao da Silva
  - Daniel Sieger
+ - Michael Skec
  - Daniel Skorupski
  - Slemmie
  - Anthony Smith
