@@ -23,14 +23,20 @@
 //
 //========================================================================
 
+#ifndef BUILD_MONOLITHIC
 #define GLAD_GL_IMPLEMENTATION
+#endif
 #include <glad/gl.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 #include <stdarg.h>
 
+#ifdef BUILD_MONOLITHIC
+#define NK_LIB
+#else 
 #define NK_IMPLEMENTATION
+#endif
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
@@ -40,7 +46,9 @@
 #define NK_BUTTON_TRIGGER_ON_RELEASE
 #include <nuklear.h>
 
+#ifndef BUILD_MONOLITHIC
 #define NK_GLFW_GL2_IMPLEMENTATION
+#endif
 #include <nuklear_glfw_gl2.h>
 
 #include <stdbool.h>
@@ -48,7 +56,12 @@
 #include <stdlib.h>
 #include <limits.h>
 
-int main(int argc, char** argv)
+
+#ifdef BUILD_MONOLITHIC
+#define main    glfw_glfwindow_test_main
+#endif
+
+int main(int argc, const char** argv)
 {
     int windowed_x, windowed_y, windowed_width, windowed_height;
     int last_xpos = INT_MIN, last_ypos = INT_MIN;

@@ -29,7 +29,9 @@
 //
 //========================================================================
 
+#ifndef BUILD_MONOLITHIC
 #define GLAD_GL_IMPLEMENTATION
+#endif
 #include <glad/gl.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -96,7 +98,12 @@ static void usage(void)
     printf("Usage: msaa [-h] [-s SAMPLES]\n");
 }
 
-int main(int argc, char** argv)
+
+#ifdef BUILD_MONOLITHIC
+#define main    glfw_msaa_test_main
+#endif
+
+int main(int argc, const char** argv)
 {
     int ch, samples = 4;
     GLFWwindow* window;

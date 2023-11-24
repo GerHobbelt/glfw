@@ -55,11 +55,12 @@ static const struct
 #if defined(_GLFW_WAYLAND)
     { GLFW_PLATFORM_WAYLAND, _glfwConnectWayland },
 #endif
+	{0}		// sentinel
 };
 
 GLFWbool _glfwSelectPlatform(int desiredID, _GLFWplatform* platform)
 {
-    const size_t count = sizeof(supportedPlatforms) / sizeof(supportedPlatforms[0]);
+    const size_t count = sizeof(supportedPlatforms) / sizeof(supportedPlatforms[0]) - 1 /* discount sentinel */;
     size_t i;
 
     if (desiredID != GLFW_ANY_PLATFORM &&
@@ -123,7 +124,7 @@ GLFWAPI int glfwGetPlatform(void)
 
 GLFWAPI int glfwPlatformSupported(int platformID)
 {
-    const size_t count = sizeof(supportedPlatforms) / sizeof(supportedPlatforms[0]);
+    const size_t count = sizeof(supportedPlatforms) / sizeof(supportedPlatforms[0]) - 1 /* discount sentinel */;
     size_t i;
 
     if (platformID != GLFW_PLATFORM_WIN32 &&
