@@ -83,6 +83,7 @@ video tutorials.
  - Stephen Gutekanst
  - Jonathan Hale
  - hdf89shfdfs
+ - Moritz Heinemann
  - Sylvain Hellegouarch
  - Björn Hempel
  - Matthew Henry
@@ -247,6 +248,7 @@ video tutorials.
  - Corentin Wallez
  - Torsten Walluhn
  - Patrick Walton
+ - Jim Wang
  - Xo Wang
  - Andre Weissflog
  - Jay Weisskopf
