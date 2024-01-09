@@ -3,9 +3,9 @@ from conans import ConanFile
 
 class glfwConan(ConanFile):
     name = "glfw"
-    version = "3.3.8"
+    version = "3.3.9"
     url = "https://github.com/Esri/glfw"
-    license = "https://github.com/Esri/glfw/blob/master/LICENSE.md"
+    license = "https://github.com/Esri/glfw/blob/latest/LICENSE.md"
     description = (
         "GLFW is an Open Source, multi-platform library for OpenGL, OpenGL ES and Vulkan application development."
     )
