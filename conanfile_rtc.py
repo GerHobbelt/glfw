@@ -21,5 +21,5 @@ class glfwConan(ConanFile):
         self.copy("*.h*", src=base + "include/GLFW/", dst=relative + "include/GLFW/")
 
         # libraries
-        output = "output/" + str(self.settings.platform_architecture_target) + "/bin"
+        output = "output/" + str(self.settings.platform_architecture_target) + "/staticlib"
         self.copy("*" + self.name + "*", src=base + "../../" + output, dst=output)
