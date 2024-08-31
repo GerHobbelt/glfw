@@ -55,7 +55,6 @@ static const struct
 #endif
 #if defined(_GLFW_X11)
     { GLFW_PLATFORM_X11, _glfwConnectX11 },
-#endif
 	{0}		// sentinel
 };
 

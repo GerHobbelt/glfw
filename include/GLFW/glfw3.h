@@ -1233,11 +1233,11 @@ extern "C" {
  *  @note @macos This shape is provided by a private system API and may fail
  *  with @ref GLFW_CURSOR_UNAVAILABLE in the future.
  *
- *  @note @x11 This shape is provided by a newer standard not supported by all
- *  cursor themes.
- *
  *  @note @wayland This shape is provided by a newer standard not supported by
  *  all cursor themes.
+ *
+ *  @note @x11 This shape is provided by a newer standard not supported by all
+ *  cursor themes.
  */
 #define GLFW_RESIZE_NWSE_CURSOR     0x00036007
 /*! @brief The top-right to bottom-left diagonal resize/move arrow shape.
@@ -1248,11 +1248,11 @@ extern "C" {
  *  @note @macos This shape is provided by a private system API and may fail
  *  with @ref GLFW_CURSOR_UNAVAILABLE in the future.
  *
- *  @note @x11 This shape is provided by a newer standard not supported by all
- *  cursor themes.
- *
  *  @note @wayland This shape is provided by a newer standard not supported by
  *  all cursor themes.
+ *
+ *  @note @x11 This shape is provided by a newer standard not supported by all
+ *  cursor themes.
  */
 #define GLFW_RESIZE_NESW_CURSOR     0x00036008
 /*! @brief The omni-directional resize/move cursor shape.
@@ -1266,11 +1266,11 @@ extern "C" {
  *  The operation-not-allowed shape.  This is usually a circle with a diagonal
  *  line through it.
  *
- *  @note @x11 This shape is provided by a newer standard not supported by all
- *  cursor themes.
- *
  *  @note @wayland This shape is provided by a newer standard not supported by
  *  all cursor themes.
+ *
+ *  @note @x11 This shape is provided by a newer standard not supported by all
+ *  cursor themes.
  */
 #define GLFW_NOT_ALLOWED_CURSOR     0x0003600A
 /*! @brief Legacy name for compatibility.
@@ -2198,16 +2198,16 @@ typedef struct GLFWallocator
  *  and dock icon can be disabled entirely with the @ref GLFW_COCOA_MENUBAR init
  *  hint.
  *
- *  @remark @x11 This function will set the `LC_CTYPE` category of the
- *  application locale according to the current environment if that category is
- *  still "C".  This is because the "C" locale breaks Unicode text input.
- *
  *  @remark __Wayland, X11:__ If the library was compiled with support for both
  *  Wayland and X11, and the @ref GLFW_PLATFORM init hint is set to
  *  `GLFW_ANY_PLATFORM`, the `XDG_SESSION_TYPE` environment variable affects
  *  which platform is picked.  If the environment variable is not set, or is set
  *  to something other than `wayland` or `x11`, the regular detection mechanism
  *  will be used instead.
+ *
+ *  @remark @x11 This function will set the `LC_CTYPE` category of the
+ *  application locale according to the current environment if that category is
+ *  still "C".  This is because the "C" locale breaks Unicode text input.
  *
  *  @thread_safety This function must only be called from the main thread.
  *
@@ -3201,6 +3201,15 @@ GLFWAPI void glfwWindowHintString(int hint, const char* value);
  *  [GLFW_COCOA_FRAME_NAME](@ref GLFW_COCOA_FRAME_NAME_hint), the specified
  *  window size and position may be overridden by previously saved values.
  *
+ *  @remark @wayland GLFW uses [libdecor][] where available to create its window
+ *  decorations.  This in turn uses server-side XDG decorations where available
+ *  and provides high quality client-side decorations on compositors like GNOME.
+ *  If both XDG decorations and libdecor are unavailable, GLFW falls back to
+ *  a very simple set of window decorations that only support moving, resizing
+ *  and the window manager's right-click menu.
+ *
+ *  [libdecor]: https://gitlab.freedesktop.org/libdecor/libdecor
+ *
  *  @remark @x11 Some window managers will not respect the placement of
  *  initially hidden windows.
  *
@@ -3216,20 +3225,6 @@ GLFWAPI void glfwWindowHintString(int hint, const char* value);
  *  [GLFW_X11_CLASS_NAME](@ref GLFW_X11_CLASS_NAME_hint) and
  *  [GLFW_X11_INSTANCE_NAME](@ref GLFW_X11_INSTANCE_NAME_hint) window hints to
  *  override this.
- *
- *  @remark @wayland Compositors should implement the xdg-decoration protocol
- *  for GLFW to decorate the window properly.  If this protocol isn't
- *  supported, or if the compositor prefers client-side decorations, a very
- *  simple fallback frame will be drawn using the wp_viewporter protocol.  A
- *  compositor can still emit close, maximize or fullscreen events, using for
- *  instance a keybind mechanism.  If neither of these protocols is supported,
- *  the window won't be decorated.
- *
- *  @remark @wayland A full screen window will not attempt to change the mode,
- *  no matter what the requested size or refresh rate.
- *
- *  @remark @wayland Screensaver inhibition requires the idle-inhibit protocol
- *  to be implemented in the user's compositor.
  *
  *  @thread_safety This function must only be called from the main thread.
  *
@@ -3313,6 +3308,38 @@ GLFWAPI int glfwWindowShouldClose(GLFWwindow* window);
  */
 GLFWAPI void glfwSetWindowShouldClose(GLFWwindow* window, int value);
 
+/*! @brief Returns the title of the specified window.
+ *
+ *  This function returns the window title, encoded as UTF-8, of the specified
+ *  window.  This is the title set previously by @ref glfwCreateWindow
+ *  or @ref glfwSetWindowTitle.
+ *
+ *  @param[in] window The window to query.
+ *  @return The UTF-8 encoded window title, or `NULL` if an
+ *  [error](@ref error_handling) occurred.
+ *
+ *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
+ *
+ *  @remark The returned title is currently a copy of the title last set by @ref
+ *  glfwCreateWindow or @ref glfwSetWindowTitle.  It does not include any
+ *  additional text which may be appended by the platform or another program.
+ *
+ *  @pointer_lifetime The returned string is allocated and freed by GLFW.  You
+ *  should not free it yourself.  It is valid until the next call to @ref
+ *  glfwGetWindowTitle or @ref glfwSetWindowTitle, or until the library is
+ *  terminated.
+ *
+ *  @thread_safety This function must only be called from the main thread.
+ *
+ *  @sa @ref window_title
+ *  @sa @ref glfwSetWindowTitle
+ *
+ *  @since Added in version 3.4.
+ *
+ *  @ingroup window
+ */
+GLFWAPI const char* glfwGetWindowTitle(GLFWwindow* window);
+
 /*! @brief Sets the title of the specified window.
  *
  *  This function sets the window title, encoded as UTF-8, of the specified
@@ -3330,6 +3357,7 @@ GLFWAPI void glfwSetWindowShouldClose(GLFWwindow* window, int value);
  *  @thread_safety This function must only be called from the main thread.
  *
  *  @sa @ref window_title
+ *  @sa @ref glfwGetWindowTitle
  *
  *  @since Added in version 1.0.
  *  @glfw3 Added window handle parameter.
@@ -3594,9 +3622,6 @@ GLFWAPI void glfwSetWindowAspectRatio(GLFWwindow* window, int numer, int denom);
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
  *  GLFW_PLATFORM_ERROR.
- *
- *  @remark @wayland A full screen window will not attempt to change the mode,
- *  no matter what the requested size.
  *
  *  @thread_safety This function must only be called from the main thread.
  *
@@ -4037,9 +4062,6 @@ GLFWAPI GLFWmonitor* glfwGetWindowMonitor(GLFWwindow* window);
  *
  *  @remark @wayland The desired window position is ignored, as there is no way
  *  for an application to set this property.
- *
- *  @remark @wayland Setting the window to full screen will not attempt to
- *  change the mode, no matter what the requested size or refresh rate.
  *
  *  @thread_safety This function must only be called from the main thread.
  *
@@ -5424,8 +5446,6 @@ GLFWAPI GLFWscrollfun glfwSetScrollCallback(GLFWwindow* window, GLFWscrollfun ca
  *  [function pointer type](@ref GLFWdropfun).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
- *
- *  @remark @wayland File drop is currently unimplemented.
  *
  *  @thread_safety This function must only be called from the main thread.
  *

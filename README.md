@@ -2,7 +2,6 @@
 
 [![Build status](https://github.com/glfw/glfw/actions/workflows/build.yml/badge.svg)](https://github.com/glfw/glfw/actions)
 [![Build status](https://ci.appveyor.com/api/projects/status/0kf0ct9831i5l6sp/branch/master?svg=true)](https://ci.appveyor.com/project/elmindreda/glfw)
-[![Coverity Scan](https://scan.coverity.com/projects/4884/badge.svg)](https://scan.coverity.com/projects/glfw-glfw)
 
 ## Introduction
 
@@ -11,15 +10,15 @@ application development.  It provides a simple, platform-independent API for
 creating windows, contexts and surfaces, reading input, handling events, etc.
 
 GLFW natively supports Windows, macOS and Linux and other Unix-like systems.  On
-Linux both X11 and Wayland are supported.
+Linux both Wayland and X11 are supported.
 
 GLFW is licensed under the [zlib/libpng
 license](https://www.glfw.org/license.html).
 
 You can [download](https://www.glfw.org/download.html) the latest stable release
-as source or Windows binaries, or fetch the `latest` branch from GitHub.  Each
-release starting with 3.0 also has a corresponding [annotated
-tag](https://github.com/glfw/glfw/releases) with source and binary archives.
+as source or Windows binaries.  Each release starting with 3.0 also has
+a corresponding [annotated tag](https://github.com/glfw/glfw/releases) with
+source and binary archives.
 
 The [documentation](https://www.glfw.org/docs/latest/) is available online and is
 included in all source and binary archives.  See the [release
@@ -120,7 +119,7 @@ guide](https://github.com/glfw/glfw/blob/master/docs/CONTRIBUTING.md) for
 information on what to include when reporting a bug.
 
 
-## Changelog since 3.3.9
+## Changelog since 3.3.10
 
  - Added `GLFW_PLATFORM` init hint for runtime platform selection (#1958)
  - Added `GLFW_ANY_PLATFORM`, `GLFW_PLATFORM_WIN32`, `GLFW_PLATFORM_COCOA`,
@@ -132,6 +131,7 @@ information on what to include when reporting a bug.
  - Added `glfwInitAllocator` for setting a custom memory allocator (#544,#1628,#1947)
  - Added `GLFWallocator` struct and `GLFWallocatefun`, `GLFWreallocatefun` and
    `GLFWdeallocatefun` types (#544,#1628,#1947)
+ - Added `glfwGetWindowTitle` function for querying window title (#1448,#1909,#2482)
  - Added `glfwInitVulkanLoader` for using a non-default Vulkan loader (#1374,#1890)
  - Added `GLFW_RESIZE_NWSE_CURSOR`, `GLFW_RESIZE_NESW_CURSOR`,
    `GLFW_RESIZE_ALL_CURSOR` and `GLFW_NOT_ALLOWED_CURSOR` cursor shapes (#427)
@@ -169,16 +169,19 @@ information on what to include when reporting a bug.
    variables exposing pkg-config dependencies (#1307)
  - Made joystick subsystem initialize at first use (#1284,#1646)
  - Made `GLFW_DOUBLEBUFFER` a read-only window attribute
- - Updated the minimum required CMake version to 3.1
+ - Made Wayland the preferred platform over X11 if both are available (#2035)
+ - Updated the minimum required CMake version to 3.4
  - Updated gamepad mappings from upstream
  - Renamed `GLFW_USE_WAYLAND` CMake option to `GLFW_BUILD_WAYLAND` (#1958)
  - Disabled tests and examples by default when built as a CMake subdirectory
  - Removed `GLFW_USE_OSMESA` CMake option enabling the Null platform (#1958)
  - Removed CMake generated configuration header
+ - Bugfix: `glfwGetVideoMode` returned an invalid mode on error (#1292)
  - Removed the limit of only reporting the 8 named mouse buttons
  - [Win32] Added a version info resource to the GLFW DLL
  - [Win32] Made hidden helper window use its own window class
  - [Win32] Bugfix: The foreground lock timeout was overridden, ignoring the user
+ - [Cocoa] Added `glfwGetCocoaView` native access function (#2235)
  - [Cocoa] Moved main menu creation to GLFW initialization time (#1649)
  - [Cocoa] Bugfix: Touching event queue from secondary thread before main thread
    would abort (#1649)
@@ -199,6 +202,8 @@ information on what to include when reporting a bug.
  - [POSIX] Bugfix: `CLOCK_MONOTONIC` was not correctly tested for or enabled
  - [WGL] Disabled the DWM swap interval hack for Windows 8 and later (#1072)
  - [NSGL] Removed enforcement of forward-compatible flag for core contexts
+ - [NSGL] Bugfix: A core profile OpenGL context was returned if 3.2+
+   compatibility profile was requested
  - [EGL] Added platform selection via the `EGL_EXT_platform_base` extension
    (#442)
  - [EGL] Added ANGLE backend selection via `EGL_ANGLE_platform_angle` extension
