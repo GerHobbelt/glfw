@@ -55,7 +55,8 @@ static const struct
 #endif
 #if defined(_GLFW_X11)
     { GLFW_PLATFORM_X11, _glfwConnectX11 },
-	{0}		// sentinel
+#endif
+    {0}		// sentinel
 };
 
 GLFWbool _glfwSelectPlatform(int desiredID, _GLFWplatform* platform)
