@@ -94,7 +94,7 @@ static void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos)
 
 static int enable_vsync = nk_true;
 
-static void update_vsync()
+static void update_vsync(void)
 {
     glfwSwapInterval(enable_vsync == nk_true ? 1 : 0);
 }
