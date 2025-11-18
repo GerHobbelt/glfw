@@ -74,6 +74,8 @@
 
 #include <wctype.h>
 #include <windows.h>
+#include <windowsx.h>
+#include <winuser.h>
 #include <dwmapi.h>
 #include <dinput.h>
 #include <xinput.h>
