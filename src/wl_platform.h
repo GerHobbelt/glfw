@@ -136,18 +136,22 @@ struct wl_output;
 #define GLFW_WAYLAND_MONITOR_STATE        _GLFWmonitorWayland wl;
 #define GLFW_WAYLAND_CURSOR_STATE         _GLFWcursorWayland  wl;
 
-struct wl_cursor_image {
+struct wl_cursor_image
+{
     uint32_t width;
     uint32_t height;
     uint32_t hotspot_x;
     uint32_t hotspot_y;
     uint32_t delay;
 };
-struct wl_cursor {
+
+struct wl_cursor
+{
     unsigned int image_count;
     struct wl_cursor_image** images;
     char* name;
 };
+
 typedef struct wl_cursor_theme* (* PFN_wl_cursor_theme_load)(const char*, int, struct wl_shm*);
 typedef void (* PFN_wl_cursor_theme_destroy)(struct wl_cursor_theme*);
 typedef struct wl_cursor* (* PFN_wl_cursor_theme_get_cursor)(struct wl_cursor_theme*, const char*);
@@ -356,7 +360,6 @@ typedef struct _GLFWwindowWayland
     GLFWbool                    maximized;
     GLFWbool                    activated;
     GLFWbool                    fullscreen;
-    GLFWbool                    hovered;
     GLFWbool                    transparent;
     GLFWbool                    scaleFramebuffer;
     struct wl_surface*          surface;
@@ -412,7 +415,6 @@ typedef struct _GLFWwindowWayland
         GLFWbool                    decorations;
         struct wl_buffer*           buffer;
         _GLFWfallbackEdgeWayland    top, left, right, bottom;
-        struct wl_surface*          focus;
         wl_fixed_t                  pointerX, pointerY;
         const char*                 cursorName;
     } fallback;
@@ -453,6 +455,7 @@ typedef struct _GLFWlibraryWayland
 
     const char*                 tag;
 
+    struct wl_surface*          pointerSurface;
     struct wl_cursor_theme*     cursorTheme;
     struct wl_cursor_theme*     cursorThemeHiDPI;
     struct wl_surface*          cursorSurface;
@@ -511,7 +514,6 @@ typedef struct _GLFWlibraryWayland
         PFN_xkb_compose_state_get_one_sym compose_state_get_one_sym;
     } xkb;
 
-    _GLFWwindow*                pointerFocus;
     _GLFWwindow*                keyboardFocus;
 
     struct {

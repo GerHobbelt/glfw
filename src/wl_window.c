@@ -253,6 +253,9 @@ static void createFallbackDecorations(_GLFWwindow* window)
 
 static void destroyFallbackEdge(_GLFWfallbackEdgeWayland* edge)
 {
+    if (edge->surface == _glfw.wl.pointerSurface)
+        _glfw.wl.pointerSurface = NULL;
+
     if (edge->subsurface)
         wl_subsurface_destroy(edge->subsurface);
     if (edge->surface)
@@ -288,26 +291,26 @@ static void updateFallbackDecorationCursor(_GLFWwindow* window,
 
     if (window->resizable)
     {
-        if (window->wl.fallback.focus == window->wl.fallback.top.surface)
+        if (_glfw.wl.pointerSurface == window->wl.fallback.top.surface)
         {
             if (ypos < GLFW_BORDER_SIZE)
                 cursorName = "n-resize";
         }
-        else if (window->wl.fallback.focus == window->wl.fallback.left.surface)
+        else if (_glfw.wl.pointerSurface == window->wl.fallback.left.surface)
         {
             if (ypos < GLFW_BORDER_SIZE)
                 cursorName = "nw-resize";
             else
                 cursorName = "w-resize";
         }
-        else if (window->wl.fallback.focus == window->wl.fallback.right.surface)
+        else if (_glfw.wl.pointerSurface == window->wl.fallback.right.surface)
         {
             if (ypos < GLFW_BORDER_SIZE)
                 cursorName = "ne-resize";
             else
                 cursorName = "e-resize";
         }
-        else if (window->wl.fallback.focus == window->wl.fallback.bottom.surface)
+        else if (_glfw.wl.pointerSurface == window->wl.fallback.bottom.surface)
         {
             if (xpos < GLFW_BORDER_SIZE)
                 cursorName = "sw-resize";
@@ -360,8 +363,12 @@ static void updateFallbackDecorationCursor(_GLFWwindow* window,
 
 static void handleFallbackDecorationButton(_GLFWwindow* window,
                                            uint32_t serial,
-                                           uint32_t button)
+                                           uint32_t button,
+                                           uint32_t state)
 {
+    if (state != WL_POINTER_BUTTON_STATE_PRESSED)
+        return;
+
     const double xpos = wl_fixed_to_double(window->wl.fallback.pointerX);
     const double ypos = wl_fixed_to_double(window->wl.fallback.pointerY);
 
@@ -369,28 +376,28 @@ static void handleFallbackDecorationButton(_GLFWwindow* window,
     {
         uint32_t edges = XDG_TOPLEVEL_RESIZE_EDGE_NONE;
 
-        if (window->wl.fallback.focus == window->wl.fallback.top.surface)
+        if (_glfw.wl.pointerSurface == window->wl.fallback.top.surface)
         {
             if (ypos < GLFW_BORDER_SIZE)
                 edges = XDG_TOPLEVEL_RESIZE_EDGE_TOP;
             else
                 xdg_toplevel_move(window->wl.xdg.toplevel, _glfw.wl.seat, serial);
         }
-        else if (window->wl.fallback.focus == window->wl.fallback.left.surface)
+        else if (_glfw.wl.pointerSurface == window->wl.fallback.left.surface)
         {
             if (ypos < GLFW_BORDER_SIZE)
                 edges = XDG_TOPLEVEL_RESIZE_EDGE_TOP_LEFT;
             else
                 edges = XDG_TOPLEVEL_RESIZE_EDGE_LEFT;
         }
-        else if (window->wl.fallback.focus == window->wl.fallback.right.surface)
+        else if (_glfw.wl.pointerSurface == window->wl.fallback.right.surface)
         {
             if (ypos < GLFW_BORDER_SIZE)
                 edges = XDG_TOPLEVEL_RESIZE_EDGE_TOP_RIGHT;
             else
                 edges = XDG_TOPLEVEL_RESIZE_EDGE_RIGHT;
         }
-        else if (window->wl.fallback.focus == window->wl.fallback.bottom.surface)
+        else if (_glfw.wl.pointerSurface == window->wl.fallback.bottom.surface)
         {
             if (xpos < GLFW_BORDER_SIZE)
                 edges = XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_LEFT;
@@ -408,7 +415,7 @@ static void handleFallbackDecorationButton(_GLFWwindow* window,
         if (!window->wl.xdg.toplevel)
             return;
 
-        if (window->wl.fallback.focus != window->wl.fallback.top.surface)
+        if (_glfw.wl.pointerSurface != window->wl.fallback.top.surface)
             return;
 
         if (ypos < GLFW_BORDER_SIZE)
@@ -1267,14 +1274,16 @@ static void setCursorImage(_GLFWwindow* window,
     wl_surface_commit(surface);
 }
 
-static void incrementCursorImage(_GLFWwindow* window)
+static void incrementCursorImage(void)
 {
-    _GLFWcursor* cursor;
-
-    if (!window || !window->wl.hovered)
+    if (!_glfw.wl.pointerSurface)
         return;
 
-    cursor = window->wl.currentCursor;
+    _GLFWwindow* window = wl_surface_get_user_data(_glfw.wl.pointerSurface);
+    if (window->wl.surface != _glfw.wl.pointerSurface)
+        return;
+
+    _GLFWcursor* cursor = window->wl.currentCursor;
     if (cursor && cursor->wl.cursor)
     {
         cursor->wl.currentImage += 1;
@@ -1413,7 +1422,7 @@ static void handleEvents(double* timeout)
 
             if (read(_glfw.wl.keyRepeatTimerfd, &repeats, sizeof(repeats)) == 8)
             {
-                if(_glfw.wl.keyboardFocus)
+                if (_glfw.wl.keyboardFocus)
                 {
                     for (uint64_t i = 0; i < repeats; i++)
                     {
@@ -1436,7 +1445,7 @@ static void handleEvents(double* timeout)
             uint64_t repeats;
 
             if (read(_glfw.wl.cursorTimerfd, &repeats, sizeof(repeats)) == 8)
-                incrementCursorImage(_glfw.wl.pointerFocus);
+                incrementCursorImage();
         }
 
         if (fds[LIBDECOR_FD].revents & POLLIN)
@@ -1527,15 +1536,13 @@ static void pointerHandleEnter(void* userData,
     if (wl_proxy_get_tag((struct wl_proxy*) surface) != &_glfw.wl.tag)
         return;
 
-    _GLFWwindow* window = wl_surface_get_user_data(surface);
-
     _glfw.wl.serial = serial;
     _glfw.wl.pointerEnterSerial = serial;
-    _glfw.wl.pointerFocus = window;
+    _glfw.wl.pointerSurface = surface;
 
-    if (surface == window->wl.surface)
+    _GLFWwindow* window = wl_surface_get_user_data(surface);
+    if (window->wl.surface == surface)
     {
-        window->wl.hovered = GLFW_TRUE;
         _glfwSetCursorWayland(window, window->wl.currentCursor);
         _glfwInputCursorEnter(window, GLFW_TRUE);
 
@@ -1549,10 +1556,7 @@ static void pointerHandleEnter(void* userData,
     else
     {
         if (window->wl.fallback.decorations)
-        {
-            window->wl.fallback.focus = surface;
             updateFallbackDecorationCursor(window, sx, sy);
-        }
     }
 }
 
@@ -1567,25 +1571,16 @@ static void pointerHandleLeave(void* userData,
     if (wl_proxy_get_tag((struct wl_proxy*) surface) != &_glfw.wl.tag)
         return;
 
-    _GLFWwindow* window = _glfw.wl.pointerFocus;
-    if (!window)
-        return;
-
     _glfw.wl.serial = serial;
-    _glfw.wl.pointerFocus = NULL;
+    _glfw.wl.pointerSurface = NULL;
 
-    if (window->wl.hovered)
-    {
-        window->wl.hovered = GLFW_FALSE;
+    _GLFWwindow* window = wl_surface_get_user_data(surface);
+    if (window->wl.surface == surface)
         _glfwInputCursorEnter(window, GLFW_FALSE);
-    }
     else
     {
         if (window->wl.fallback.decorations)
-        {
-            window->wl.fallback.focus = NULL;
             window->wl.fallback.cursorName = NULL;
-        }
     }
 }
 
@@ -1595,14 +1590,15 @@ static void pointerHandleMotion(void* userData,
                                 wl_fixed_t sx,
                                 wl_fixed_t sy)
 {
-    _GLFWwindow* window = _glfw.wl.pointerFocus;
-    if (!window)
+    if (!_glfw.wl.pointerSurface)
         return;
+
+    _GLFWwindow* window = wl_surface_get_user_data(_glfw.wl.pointerSurface);
 
     if (window->cursorMode == GLFW_CURSOR_DISABLED)
         return;
 
-    if (window->wl.hovered)
+    if (window->wl.surface == _glfw.wl.pointerSurface)
     {
         window->wl.cursorPosX = wl_fixed_to_double(sx);
         window->wl.cursorPosY = wl_fixed_to_double(sy);
@@ -1622,11 +1618,12 @@ static void pointerHandleButton(void* userData,
                                 uint32_t button,
                                 uint32_t state)
 {
-    _GLFWwindow* window = _glfw.wl.pointerFocus;
-    if (!window)
+    if (!_glfw.wl.pointerSurface)
         return;
 
-    if (window->wl.hovered)
+    _GLFWwindow* window = wl_surface_get_user_data(_glfw.wl.pointerSurface);
+
+    if (window->wl.surface == _glfw.wl.pointerSurface)
     {
         _glfw.wl.serial = serial;
 
@@ -1638,7 +1635,7 @@ static void pointerHandleButton(void* userData,
     else
     {
         if (window->wl.fallback.decorations)
-            handleFallbackDecorationButton(window, serial, button);
+            handleFallbackDecorationButton(window, serial, button, state);
     }
 }
 
@@ -1648,11 +1645,12 @@ static void pointerHandleAxis(void* userData,
                               uint32_t axis,
                               wl_fixed_t value)
 {
-    _GLFWwindow* window = _glfw.wl.pointerFocus;
-    if (!window)
+    if (!_glfw.wl.pointerSurface)
         return;
 
-    if (window->wl.hovered)
+    _GLFWwindow* window = wl_surface_get_user_data(_glfw.wl.pointerSurface);
+
+    if (window->wl.surface == _glfw.wl.pointerSurface)
     {
         // NOTE: 10 units of motion per mouse wheel step seems to be a common ratio
         if (axis == WL_POINTER_AXIS_HORIZONTAL_SCROLL)
@@ -1692,7 +1690,8 @@ static void keyboardHandleKeymap(void* userData,
     }
 
     mapStr = mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
-    if (mapStr == MAP_FAILED) {
+    if (mapStr == MAP_FAILED)
+    {
         close(fd);
         return;
     }
@@ -1700,7 +1699,7 @@ static void keyboardHandleKeymap(void* userData,
     keymap = xkb_keymap_new_from_string(_glfw.wl.xkb.context,
                                         mapStr,
                                         XKB_KEYMAP_FORMAT_TEXT_V1,
-                                        0);
+                                        XKB_KEYMAP_COMPILE_NO_FLAGS);
     munmap(mapStr, size);
     close(fd);
 
@@ -1838,7 +1837,9 @@ static void keyboardHandleKey(void* userData,
             timer.it_value.tv_nsec = (_glfw.wl.keyRepeatDelay % 1000) * 1000000;
             timerfd_settime(_glfw.wl.keyRepeatTimerfd, 0, &timer, NULL);
         }
-    } else if (scancode == _glfw.wl.keyRepeatScancode) {
+    }
+    else if (scancode == _glfw.wl.keyRepeatScancode)
+    {
         timerfd_settime(_glfw.wl.keyRepeatTimerfd, 0, &timer, NULL);
     }
 
@@ -1929,7 +1930,11 @@ static void seatHandleCapabilities(void* userData,
     }
     else if (!(caps & WL_SEAT_CAPABILITY_POINTER) && _glfw.wl.pointer)
     {
-        wl_pointer_destroy(_glfw.wl.pointer);
+        if (wl_pointer_get_version(_glfw.wl.pointer) >= WL_POINTER_RELEASE_SINCE_VERSION)
+            wl_pointer_release(_glfw.wl.pointer);
+        else
+            wl_pointer_destroy(_glfw.wl.pointer);
+
         _glfw.wl.pointer = NULL;
     }
 
@@ -1940,7 +1945,11 @@ static void seatHandleCapabilities(void* userData,
     }
     else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD) && _glfw.wl.keyboard)
     {
-        wl_keyboard_destroy(_glfw.wl.keyboard);
+        if (wl_keyboard_get_version(_glfw.wl.keyboard) >= WL_KEYBOARD_RELEASE_SINCE_VERSION)
+            wl_keyboard_release(_glfw.wl.keyboard);
+        else
+            wl_keyboard_destroy(_glfw.wl.keyboard);
+
         _glfw.wl.keyboard = NULL;
     }
 }
@@ -2220,8 +2229,8 @@ GLFWbool _glfwCreateWindowWayland(_GLFWwindow* window,
 
 void _glfwDestroyWindowWayland(_GLFWwindow* window)
 {
-    if (window == _glfw.wl.pointerFocus)
-        _glfw.wl.pointerFocus = NULL;
+    if (window->wl.surface == _glfw.wl.pointerSurface)
+        _glfw.wl.pointerSurface = NULL;
 
     if (window == _glfw.wl.keyboardFocus)
     {
@@ -2596,7 +2605,7 @@ GLFWbool _glfwWindowMaximizedWayland(_GLFWwindow* window)
 
 GLFWbool _glfwWindowHoveredWayland(_GLFWwindow* window)
 {
-    return window->wl.hovered;
+    return window->wl.surface == _glfw.wl.pointerSurface;
 }
 
 GLFWbool _glfwFramebufferTransparentWayland(_GLFWwindow* window)
@@ -2973,8 +2982,14 @@ static void lockPointer(_GLFWwindow* window)
     if (!_glfw.wl.relativePointerManager)
     {
         _glfwInputError(GLFW_FEATURE_UNAVAILABLE,
-                        "Wayland: The compositor does not support pointer locking");
+                        "Wayland: The compositor does not support relative pointer motion");
         return;
+    }
+
+    if (!_glfw.wl.pointerConstraints)
+    {
+        _glfwInputError(GLFW_FEATURE_UNAVAILABLE,
+                        "Wayland: The compositor does not support locking the pointer");
     }
 
     window->wl.relativePointer =
@@ -3024,6 +3039,12 @@ static const struct zwp_confined_pointer_v1_listener confinedPointerListener =
 
 static void confinePointer(_GLFWwindow* window)
 {
+    if (!_glfw.wl.pointerConstraints)
+    {
+        _glfwInputError(GLFW_FEATURE_UNAVAILABLE,
+                        "Wayland: The compositor does not support confining the pointer");
+    }
+
     window->wl.confinedPointer =
         zwp_pointer_constraints_v1_confine_pointer(
             _glfw.wl.pointerConstraints,
@@ -3050,9 +3071,7 @@ void _glfwSetCursorWayland(_GLFWwindow* window, _GLFWcursor* cursor)
 
     window->wl.currentCursor = cursor;
 
-    // If we're not in the correct window just save the cursor
-    // the next time the pointer enters the window the cursor will change
-    if (!window->wl.hovered)
+    if (window->wl.surface != _glfw.wl.pointerSurface)
         return;
 
     // Update pointer lock to match cursor mode
