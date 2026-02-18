@@ -402,8 +402,6 @@ static void destroyContextWGL(_GLFWwindow* window)
     }
 }
 
-// Initialize WGL
-//
 GLFWbool _glfwInitWGL(void)
 {
     PIXELFORMATDESCRIPTOR pfd;
@@ -522,12 +520,10 @@ GLFWbool _glfwInitWGL(void)
     return GLFW_TRUE;
 }
 
-// Terminate WGL
-//
 void _glfwTerminateWGL(void)
 {
-    if (_glfw.wgl.instance)
-        _glfwPlatformFreeModule(_glfw.wgl.instance);
+    _glfwPlatformFreeModule(_glfw.wgl.instance);
+    _glfw.wgl.instance = NULL;
 }
 
 #define SET_ATTRIB(a, v) \
@@ -537,8 +533,6 @@ void _glfwTerminateWGL(void)
     attribs[index++] = v; \
 }
 
-// Create the OpenGL or OpenGL ES context
-//
 GLFWbool _glfwCreateContextWGL(_GLFWwindow* window,
                                const _GLFWctxconfig* ctxconfig,
                                const _GLFWfbconfig* fbconfig)

@@ -320,18 +320,19 @@ static int extensionSupportedEGL(const char* extension)
 
 static GLFWglproc getProcAddressEGL(const char* procname)
 {
-    _GLFWwindow* window = _glfwPlatformGetTls(&_glfw.contextSlot);
-    assert(window != NULL);
+    const GLFWglproc proc = (GLFWglproc) eglGetProcAddress(procname);
+    if (proc)
+        return proc;
 
-    if (window->context.egl.client)
+    if (!_glfw.egl.KHR_get_all_proc_addresses)
     {
-        GLFWglproc proc = (GLFWglproc)
-            _glfwPlatformGetModuleSymbol(window->context.egl.client, procname);
-        if (proc)
-            return proc;
+        _GLFWwindow* window = _glfwPlatformGetTls(&_glfw.contextSlot);
+        assert(window != NULL);
+
+        return _glfwPlatformGetModuleSymbol(window->context.egl.client, procname);
     }
 
-    return eglGetProcAddress(procname);
+    return NULL;
 }
 
 static void destroyContextEGL(_GLFWwindow* window)
@@ -341,11 +342,8 @@ static void destroyContextEGL(_GLFWwindow* window)
     if (_glfw.platform.platformID != GLFW_PLATFORM_X11 ||
         window->context.client != GLFW_OPENGL_API)
     {
-        if (window->context.egl.client)
-        {
-            _glfwPlatformFreeModule(window->context.egl.client);
-            window->context.egl.client = NULL;
-        }
+        _glfwPlatformFreeModule(window->context.egl.client);
+        window->context.egl.client = NULL;
     }
 
     if (window->context.egl.surface)
@@ -366,8 +364,6 @@ static void destroyContextEGL(_GLFWwindow* window)
 //////                       GLFW internal API                      //////
 //////////////////////////////////////////////////////////////////////////
 
-// Initialize EGL
-//
 GLFWbool _glfwInitEGL(void)
 {
     int i;
@@ -377,10 +373,10 @@ GLFWbool _glfwInitEGL(void)
     {
 #if defined(_GLFW_EGL_LIBRARY)
         _GLFW_EGL_LIBRARY,
-#elif defined(_GLFW_WIN32)
+#elif defined(_WIN32)
         "libEGL.dll",
         "EGL.dll",
-#elif defined(_GLFW_COCOA)
+#elif defined(__APPLE__)
         "libEGL.dylib",
 #elif defined(__CYGWIN__)
         "libEGL-1.so",
@@ -553,8 +549,6 @@ GLFWbool _glfwInitEGL(void)
     return GLFW_TRUE;
 }
 
-// Terminate EGL
-//
 void _glfwTerminateEGL(void)
 {
     if (_glfw.egl.display)
@@ -564,7 +558,7 @@ void _glfwTerminateEGL(void)
     }
 
     // Free modules only after all wayland termination functions are called
-    if (_glfw.egl.handle && _glfw.platform.platformID != GLFW_PLATFORM_WAYLAND)
+    if (_glfw.platform.platformID != GLFW_PLATFORM_WAYLAND)
     {
         _glfwPlatformFreeModule(_glfw.egl.handle);
         _glfw.egl.handle = NULL;
@@ -578,8 +572,6 @@ void _glfwTerminateEGL(void)
     attribs[index++] = v; \
 }
 
-// Create the OpenGL or OpenGL ES context
-//
 GLFWbool _glfwCreateContextEGL(_GLFWwindow* window,
                                const _GLFWctxconfig* ctxconfig,
                                const _GLFWfbconfig* fbconfig)
@@ -812,10 +804,10 @@ GLFWbool _glfwCreateContextEGL(_GLFWwindow* window,
         {
 #if defined(_GLFW_GLESV1_LIBRARY)
             _GLFW_GLESV1_LIBRARY,
-#elif defined(_GLFW_WIN32)
+#elif defined(_WIN32)
             "GLESv1_CM.dll",
             "libGLES_CM.dll",
-#elif defined(_GLFW_COCOA)
+#elif defined(__APPLE__)
             "libGLESv1_CM.dylib",
 #elif defined(__OpenBSD__) || defined(__NetBSD__)
             "libGLESv1_CM.so",
@@ -829,10 +821,10 @@ GLFWbool _glfwCreateContextEGL(_GLFWwindow* window,
         {
 #if defined(_GLFW_GLESV2_LIBRARY)
             _GLFW_GLESV2_LIBRARY,
-#elif defined(_GLFW_WIN32)
+#elif defined(_WIN32)
             "GLESv2.dll",
             "libGLESv2.dll",
-#elif defined(_GLFW_COCOA)
+#elif defined(__APPLE__)
             "libGLESv2.dylib",
 #elif defined(__CYGWIN__)
             "libGLESv2-2.so",
@@ -847,8 +839,8 @@ GLFWbool _glfwCreateContextEGL(_GLFWwindow* window,
         {
 #if defined(_GLFW_OPENGL_LIBRARY)
             _GLFW_OPENGL_LIBRARY,
-#elif defined(_GLFW_WIN32)
-#elif defined(_GLFW_COCOA)
+#elif defined(_WIN32)
+#elif defined(__APPLE__)
 #elif defined(__OpenBSD__) || defined(__NetBSD__)
             "libGL.so",
 #else
