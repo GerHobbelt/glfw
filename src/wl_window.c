@@ -199,6 +199,16 @@ static struct wl_buffer* createShmBuffer(const GLFWimage* image)
     return buffer;
 }
 
+static void callbackHandleDone(void* userData, struct wl_callback* callback, uint32_t data)
+{
+    wl_callback_destroy(callback);
+}
+
+static const struct wl_callback_listener noopCallbackListener =
+{
+    callbackHandleDone
+};
+
 static void createFallbackEdge(_GLFWwindow* window,
                                _GLFWfallbackEdgeWayland* edge,
                                struct wl_surface* parent,
@@ -2715,6 +2725,8 @@ void _glfwHideWindowWayland(_GLFWwindow* window)
 
         wl_surface_attach(window->wl.surface, NULL, 0, 0);
         wl_surface_commit(window->wl.surface);
+
+        flushDisplay();
     }
 }
 
@@ -2929,7 +2941,9 @@ void _glfwWaitEventsTimeoutWayland(double timeout)
 
 void _glfwPostEmptyEventWayland(void)
 {
-    wl_display_sync(_glfw.wl.display);
+    struct wl_callback* callback = wl_display_sync(_glfw.wl.display);
+    wl_callback_add_listener(callback, &noopCallbackListener, NULL);
+
     flushDisplay();
 }
 
